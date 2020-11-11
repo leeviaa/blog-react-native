@@ -1,13 +1,12 @@
 import createDataContext from './createDataContext'
+import jsonServer from '../api/jsonServer'
 
 
 //set reducer for useReducer hook
 const blogReducer = (state, action) => {
   switch(action.type) {
-    case 'add_post': 
-      return [
-        ...state, {id: Math.floor(Math.random() * 99999) ,title: action.payload.title, content: action.payload.content}
-      ]
+    case 'get_posts': 
+      return action.payload;
     case 'delete_post': 
       return state.filter((blogPost) => {
        return blogPost.id !== action.payload
@@ -25,11 +24,17 @@ const blogReducer = (state, action) => {
 
 }
 
+const getBlogPosts = dispatch => {
+  return async () => {
+    //retrieving data from jsonServer package
+    const res = await jsonServer.get('/blogposts')
+    dispatch({type: 'get_posts', payload: res.data})
+  }
+}
 
 const addBlogPost = (dispatch) => {
-  return (title, content, callback) => {
-    dispatch({type: 'add_post', payload: {title, content}});
-    
+  return async (title, content, callback) => {
+    await jsonServer.post('/blogposts', {title, content});
     if(callback) {
       callback()
     }
@@ -38,13 +43,15 @@ const addBlogPost = (dispatch) => {
 }
 
 const deleteBlogPost = (dispatch) => {
-  return (id) => {
+  return async (id) => {
+    await jsonServer.delete(`/blogposts/${id}`)
     dispatch({type: 'delete_post' , payload: id})
   }
 }
 
 const editBlogPost = dispatch => {
-  return (id, title, content, callback) => {
+  return async (id, title, content, callback) => {
+    await jsonServer.put(`/blogposts/${id}`, {title, content})
     dispatch({type: 'edit_post', payload: {id, title, content}})
 
     if(callback) {
@@ -53,4 +60,4 @@ const editBlogPost = dispatch => {
   }
   
 }
-export const {Context, Provider} = createDataContext(blogReducer, {addBlogPost, deleteBlogPost, editBlogPost}, [{id: 1, title: 'TEST POST', content: "TEST CONTENT"}])
+export const {Context, Provider} = createDataContext(blogReducer, {addBlogPost, deleteBlogPost, editBlogPost, getBlogPosts}, [])

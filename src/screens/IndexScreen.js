@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {View,Text, StyleSheet, FlatList, Button, TouchableOpacity} from 'react-native'
 import { Context } from '../context/BlogContext'
 import { Feather } from '@expo/vector-icons';
@@ -6,7 +6,23 @@ import { Feather } from '@expo/vector-icons';
 const IndexScreen  = ({navigation}) => {
   //extracting value to a variable from useContext hook and passing it the provider
   //destructure to get func and data out of object 
-  const {state , addBlogPost, deleteBlogPost} = useContext(Context);
+  const {state , addBlogPost, deleteBlogPost, getBlogPosts} = useContext(Context);
+
+  //use effect hook to call getBlogPosts() just once when component loads
+  useEffect(() => {
+    getBlogPosts();
+
+    //any time index screen gains focus, run this callback on addListeer
+    //set to variable of listener so that we can clean it up as needed
+    const listener = navigation.addListener('didFocus', () => {
+      getBlogPosts();
+    })
+    //this function will be invoked if index screen is removed from stack
+    return () => {
+      //remove listener to prevent memory leaks
+      listener.remove();
+    }
+  }, [])
 
   return (
     <View>
